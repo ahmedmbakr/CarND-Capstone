@@ -55,8 +55,7 @@ class DBWNode(object):
 
 	rospy.Subscriber('/twist_cmd', TwistStamped, self.twist_cb)
 	rospy.Subscriber('/current_velocity', TwistStamped, self.velocity_cb)
-	# TODO: By Bakr: I may need to add a subscriber for dbw_enabled but I cannot find a topic for it
-
+	rospy.Subscriber('/vehicle/dbw_enabled', Bool, self.dbw_enabled_cb)
 
 	self.controller = Controller(vehicle_mass, fuel_capacity, brake_deadband, decel_limit, accel_limit, wheel_radius, wheel_base, steer_ratio, max_lat_accel, max_steer_angle)
 
@@ -89,7 +88,6 @@ class DBWNode(object):
             # if <dbw is enabled>:
             #   self.publish(throttle, brake, steer)
 	    
-	    self.dbw_enabled = True #TODO: by Bakr: to be changed later using a subscriber
 	    #rospy.logwarn("angular vel: {0}".format(self.angular_vel))
 	    #rospy.logwarn("linear vel: {0}".format(self.linear_vel))
 	    #rospy.logwarn("CURRENT vel: {0}".format(self.current_vel))
