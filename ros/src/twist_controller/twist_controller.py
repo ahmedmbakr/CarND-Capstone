@@ -1,3 +1,7 @@
+from yaw_controller import YawController
+from pid import PID
+from lowpass import LowPassFilter
+import rospy
 
 GAS_DENSITY = 2.858
 ONE_MPH = 0.44704
@@ -9,11 +13,11 @@ class Controller(object):
         self.yaw_controller = YawController(wheel_base, steer_ratio, 0.1, max_lat_accel, max_steer_angle)
 
 	kp = 0.3
-	ki = 0.1
-	kd = 0.
-	mn = 0.
-	mx = 0.2
-	self.throttle_controller = PID(kp, ki, kd, mn, mx)
+	ki = 0.001
+	kd = 10.
+	mn_acceleration = 0.
+	mx_acceleration = 0.2
+	self.throttle_controller = PID(kp, ki, kd, mn_acceleration, mx_acceleration)
 
 	tau = 0.5
 	ts = .02
@@ -29,6 +33,7 @@ class Controller(object):
 	self.last_time = rospy.get_time()
 
     def control(self, current_vel, dbw_enabled, linear_vel, angular_vel):
+	#return 1., 0., 0.
         # TODO: Change the arg, kwarg list to suit your needs
         # Return throttle, brake, steer
 	if not dbw_enabled:
@@ -53,7 +58,7 @@ class Controller(object):
 
 	if linear_vel ==0. and current_vel < 0.1:
 		throttle = 0
-		brake = 700#400 #N*m - to hold the car in place if we are stopped at a light. Acceleration - 1m/s^2
+		brake = 700 #N*m - to hold the car in place if we are stopped at a light. Acceleration - 1m/s^2
 
 	elif throttle < .1 and vel_error < 0:
 		throttle = 0

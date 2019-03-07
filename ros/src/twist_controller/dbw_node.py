@@ -53,12 +53,21 @@ class DBWNode(object):
         max_lat_accel = rospy.get_param('~max_lat_accel', 3.)
         max_steer_angle = rospy.get_param('~max_steer_angle', 8.)
 
+	rospy.Subscriber('/twist_cmd', TwistStamped, self.twist_cb)
+	rospy.Subscriber('/current_velocity', TwistStamped, self.velocity_cb)
+	# TODO: By Bakr: I may need to add a subscriber for dbw_enabled but I cannot find a topic for it
+
+
+	self.controller = Controller(vehicle_mass, fuel_capacity, brake_deadband, decel_limit, accel_limit, wheel_radius, wheel_base, steer_ratio, max_lat_accel, max_steer_angle)
+
         self.steer_pub = rospy.Publisher('/vehicle/steering_cmd',
                                          SteeringCmd, queue_size=1)
         self.throttle_pub = rospy.Publisher('/vehicle/throttle_cmd',
                                             ThrottleCmd, queue_size=1)
         self.brake_pub = rospy.Publisher('/vehicle/brake_cmd',
                                          BrakeCmd, queue_size=1)
+
+
 
         # TODO: Create `Controller` object
         # self.controller = Controller(<Arguments you wish to provide>)
@@ -80,9 +89,14 @@ class DBWNode(object):
             # if <dbw is enabled>:
             #   self.publish(throttle, brake, steer)
 	    
+	    self.dbw_enabled = True #TODO: by Bakr: to be changed later using a subscriber
+	    #rospy.logwarn("angular vel: {0}".format(self.angular_vel))
+	    #rospy.logwarn("linear vel: {0}".format(self.linear_vel))
+	    #rospy.logwarn("CURRENT vel: {0}".format(self.current_vel))
 	    if not None in (self.current_vel, self.linear_vel, self.angular_vel):
 		self.throttle, self.brake, self.steering = self.controller.control(self.current_vel, self.dbw_enabled, self.linear_vel, self.angular_vel)
 		if(self.dbw_enabled):
+		    rospy.logwarn("throttle, brake, steering: {0}, {1}, {2}".format(self.throttle, self.brake, self.steering))
 		    self.publish(self.throttle, self.brake, self.steering)
             rate.sleep()
 
