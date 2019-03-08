@@ -25,6 +25,7 @@ TODO (for Yousuf and Aaron): Stopline location for each traffic light.
 '''
 
 LOOKAHEAD_WPS = 50 # Number of waypoints we will publish. You can change this number
+MAX_DECEL = 0.5
 
 
 class WaypointUpdater(object):
@@ -36,6 +37,7 @@ class WaypointUpdater(object):
 	self.base_waypoints = None
 	self.waypoints_2d = None
 	self.waypoint_tree = None
+	self.stopline_wp_idx = -1
 
         rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb)
         rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)
@@ -55,14 +57,15 @@ class WaypointUpdater(object):
 	rate = rospy.Rate(50)
 	while not rospy.is_shutdown():
 		if self.pose and self.base_waypoints:
-			#get closest waypoint
-			closest_waypoint_idx = self.get_closest_waypoint_idx()
-			self.publish_waypoints(closest_waypoint_idx)
+			self.publish_waypoints()
 		rate.sleep()
 
     def get_closest_waypoint_idx(self):
 	x = self.pose.pose.position.x
 	y = self.pose.pose.position.y
+	if not self.waypoint_tree:
+		rospy.logerr("Trying to use self.waypoint_tree before initialization in function get_closest_waypoint_idx. Recovery mechanism is to return 0")
+		return 0
 	closest_idx = self.waypoint_tree.query([x, y], 1)[1]
 	
 	#check if closest is ahead or behind vehicle
@@ -80,16 +83,43 @@ class WaypointUpdater(object):
 		closest_idx = (closest_idx + 1) % len(self.waypoints_2d)
 	return closest_idx
 
-    def publish_waypoints(self, closest_idx):
-	lane = Lane()
-	lane.header = self.base_waypoints.header
-	lane.waypoints = self.base_waypoints.waypoints[closest_idx : closest_idx + LOOKAHEAD_WPS] # we do not have to worry about the  array out of boundaries because the slicing handles that
-	self.final_waypoints_pub.publish(lane)
+    def publish_waypoints(self):
+	final_lane = self.generate_lane()
+	self.final_waypoints_pub.publish(final_lane)
 
+    def generate_lane(self):
+	lane = Lane()
+	closest_idx = self.get_closest_waypoint_idx()
+	farthest_idx = closest_idx + LOOKAHEAD_WPS
+	base_waypoints = self.base_waypoints.waypoints[closest_idx : farthest_idx]
+	
+	if self.stopline_wp_idx == -1 or self.stopline_wp_idx >= farthest_idx:
+		lane.waypoints = base_waypoints
+	else:
+		lane.waypoints = self.decelerate_waypoints(base_waypoints, closest_idx)
+	rospy.logwarn("Generated lane points: {0}".format(len(lane.waypoints)))
+	return lane
+    def decelerate_waypoints(self, waypoints, closest_idx):
+	rospy.logwarn("Execute decelerate waypoints function")
+	temp = []
+	stop_idx = max(self.stopline_wp_idx - closest_idx - 2, 0) # Two waypoints back from line so front of car stops at line
+	waypoints = waypoints[0:stop_idx+1]
+	for i, wp in enumerate(waypoints):
+		p = Waypoint()
+		p.pose = wp.pose
+		
+		dist = self.distance(waypoints,i, stop_idx)
+		vel = math.sqrt(2* MAX_DECEL * dist)
+		if vel < 1.:
+			vel = 0.
+		p.twist.twist.linear.x = min(vel, wp.twist.twist.linear.x)
+		rospy.logwarn("vel: {0}".format(p.twist.twist.linear.x))
+		temp.append(p)
+	return temp
 
     def trafficpoints_cb(self, trafficpoints):
-	#TODO
-	pass
+	self.stopline_wp_idx = trafficpoints.data
+	rospy.logwarn("Recieved stopline_idx: {0}".format(self.stopline_wp_idx))
 
     def pose_cb(self, msg):
         self.pose = msg
