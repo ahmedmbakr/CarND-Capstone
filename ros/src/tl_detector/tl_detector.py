@@ -11,6 +11,7 @@ import tf
 import cv2
 import yaml
 from scipy.spatial import KDTree
+import os
 
 STATE_COUNT_THRESHOLD = 3
 
@@ -24,6 +25,7 @@ class TLDetector(object):
 	
 	self.waypoints_2d = None
 	self.waypoint_tree = None
+	self.img_counter = 0
 
         self.lights = []
 
@@ -54,7 +56,12 @@ class TLDetector(object):
         self.last_wp = -1
         self.state_count = 0
 
-        rospy.spin()
+        self.loop()
+
+    def loop(self):
+	rate = rospy.Rate(2)
+	while not rospy.is_shutdown():
+		rate.sleep()
 
     def pose_cb(self, msg):
         self.pose = msg
@@ -122,8 +129,17 @@ class TLDetector(object):
         Returns:
             int: ID of traffic light color (specified in styx_msgs/TrafficLight)
 
-        """
+        """	
 	# For testing just return the light state
+	recorded_imgs_directory = "../../../recorded_imgs/"
+	if not os.path.exists(recorded_imgs_directory):
+		os.makedirs(recorded_imgs_directory)
+	self.img_counter += 1 
+	num_imgs_to_drop = 10
+	if ((self.img_counter % num_imgs_to_drop) == 0):	
+		cv_image = self.bridge.imgmsg_to_cv2(self.camera_image, "bgr8")
+		cv2.imwrite(recorded_imgs_directory + 'img_' + str(light.state) + '_' + str(self.img_counter / num_imgs_to_drop) + '.png',cv_image)
+		rospy.logerr("light.state:{0}".format(light.state))
 	return light.state#####################################################
 
         if(not self.has_image):
