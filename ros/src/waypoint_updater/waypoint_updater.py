@@ -97,13 +97,12 @@ class WaypointUpdater(object):
 		lane.waypoints = base_waypoints
 	else:
 		lane.waypoints = self.decelerate_waypoints(base_waypoints, closest_idx)
-	rospy.logwarn("Generated lane points: {0}".format(len(lane.waypoints)))
+	#rospy.logwarn("Generated lane points: {0}".format(len(lane.waypoints)))
 	return lane
     def decelerate_waypoints(self, waypoints, closest_idx):
-	rospy.logwarn("Execute decelerate waypoints function")
+	#rospy.logwarn("Execute decelerate waypoints function")
 	temp = []
-	stop_idx = max(self.stopline_wp_idx - closest_idx - 2, 0) # Two waypoints back from line so front of car stops at line
-	waypoints = waypoints[0:stop_idx+1]
+	stop_idx = max(self.stopline_wp_idx - closest_idx - 10, 0) # Two waypoints back from line so front of car stops at line
 	for i, wp in enumerate(waypoints):
 		p = Waypoint()
 		p.pose = wp.pose
@@ -113,13 +112,13 @@ class WaypointUpdater(object):
 		if vel < 1.:
 			vel = 0.
 		p.twist.twist.linear.x = min(vel, wp.twist.twist.linear.x)
-		rospy.logwarn("vel: {0}".format(p.twist.twist.linear.x))
+		#rospy.logwarn("vel: {0}".format(p.twist.twist.linear.x))
 		temp.append(p)
 	return temp
 
     def trafficpoints_cb(self, trafficpoints):
 	self.stopline_wp_idx = trafficpoints.data
-	rospy.logwarn("Recieved stopline_idx: {0}".format(self.stopline_wp_idx))
+	#rospy.logwarn("Recieved stopline_idx: {0}".format(self.stopline_wp_idx))
 
     def pose_cb(self, msg):
         self.pose = msg
