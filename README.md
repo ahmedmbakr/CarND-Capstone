@@ -1,4 +1,33 @@
+### Individual Submission
+E-mail: ahmed.bakr@feng.bu.edu.eg
+
 This is the project repo for the final project of the Udacity Self-Driving Car Nanodegree: Programming a Real Self-Driving Car. For more information about the project, see the project introduction [here](https://classroom.udacity.com/nanodegrees/nd013/parts/6047fe34-d93c-4f50-8336-b70ef10cb4b2/modules/e1a23b06-329a-4684-a717-ad476f0d8dff/lessons/462c933d-9f24-42d3-8bdc-a08a5fc866e4/concepts/5ab4b122-83e6-436d-850f-9f4d26627fd9).
+
+The project is built using ROS nodes that communicate with each other using ros-topics as shown in the following figure:
+**TODO: put the figure here **
+
+### Project requirements
+This projects requires the car to move in the middle lane and stop at the red lights using detection and classification mechanisms.
+The acceleration of the car should not exceed 10 m/s^2, and the jerk should not exceed 10 m/s^2.
+
+Lets talk briefly about the important parts of the project:
+
+#### Waypoint Updater
+This ros node is responsible for giving the simulator a list of points (Trajectory) for the next T seconds so that the car follows.
+I used 50 lookahead points.
+This node is responsible for the acceleration and the deceleration of the car.
+It accelerates as long as there is no red traffic in front of it, and decelerates otherwise.
+
+#### Waypoint Loader
+This ros node runs only once and it is responsible for genrating the way points for the whole road.
+I used it also to set the maximum speed of the car.
+
+#### DBW node
+Drive by wire node is responsible for giving commands to the car so that it makes sure that the car follows the trajectory.
+Those commads are:
+ - Road Wheel angle
+ - Acceleration (Throttle)
+ - Deceleration (Brake)
 
 Please use **one** of the two installation options, either native **or** docker installation.
 
