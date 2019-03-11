@@ -16,7 +16,7 @@ from object_detection.object_detection_main import Object_detector
 import PIL
 import scipy.misc
 
-STATE_COUNT_THRESHOLD = 3
+STATE_COUNT_THRESHOLD = 1
 
 class TLDetector(object):
     def __init__(self):
@@ -45,7 +45,7 @@ class TLDetector(object):
         rely on the position of the light and the camera image to predict it.
         '''
         sub3 = rospy.Subscriber('/vehicle/traffic_lights', TrafficLightArray, self.traffic_cb)
-        sub6 = rospy.Subscriber('/image_color', Image, self.image_cb)
+        sub6 = rospy.Subscriber('/image_color', Image, self.image_cb, queue_size=1, buff_size = 2*52428800)
 
         config_string = rospy.get_param("/traffic_light_config")
         self.config = yaml.load(config_string)
@@ -64,7 +64,7 @@ class TLDetector(object):
         self.loop()
 
     def loop(self):
-	rate = rospy.Rate(2)
+	rate = rospy.Rate(10)
 	while not rospy.is_shutdown():
 		rate.sleep()
 
@@ -105,6 +105,7 @@ class TLDetector(object):
             self.last_state = self.state
             light_wp = light_wp if state == TrafficLight.RED else -1
             self.last_wp = light_wp
+	    print("red-light location published by detector:", light_wp)
             self.upcoming_red_light_pub.publish(Int32(light_wp))
         else:
             self.upcoming_red_light_pub.publish(Int32(self.last_wp))
@@ -147,8 +148,8 @@ class TLDetector(object):
 		cv2.imwrite(new_image_path ,cv_image)
 		rospy.logerr("light.state:{0}".format(light.state))"""
 	
-	
-
+	print("new image recieved by get_light_state")
+	########################return light.state#####################################################
         if(not self.has_image):
             self.prev_light_loc = None
             return False
@@ -166,7 +167,7 @@ class TLDetector(object):
 	for image_np2 in detected_imgs_np_list:
 		classification_out = self.light_classifier.get_classification(image_np2)
 		print("CLASIFICATION OUT: ",classification_out)
-		if classification_out != 4:#not equal UNKOWN
+		if classification_out != TrafficLight.UNKNOWN:#not equal UNKOWN
 			return classification_out
 		"""new_image_name = 'image-' + str(image_counter) + '-' + str(detection_counter) + '.jpg'
 		print new_image_name
@@ -176,7 +177,7 @@ class TLDetector(object):
 	
 	#return light.state#####################################################
         #Get classification
-        return 4 #UNKOWN
+        return TrafficLight.UNKNOWN #UNKOWN
 
     def process_traffic_lights(self):
         """Finds closest visible traffic light, if one exists, and determines its
@@ -206,12 +207,13 @@ class TLDetector(object):
 			diff = d
 			closest_light = light
 			line_wp_idx = temp_wp_idx
-	if diff > 70:
+	if diff > 100:
 		return -1, TrafficLight.UNKNOWN
         #TODO find the closest visible traffic light (if one exists)
 
         if closest_light:
             state = self.get_light_state(closest_light)
+	    print("red light detected:", line_wp_idx, " state is :", state)
             return line_wp_idx, state
         ######self.waypoints = None
         return -1, TrafficLight.UNKNOWN
