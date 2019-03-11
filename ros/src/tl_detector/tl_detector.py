@@ -136,16 +136,16 @@ class TLDetector(object):
 
         """	
 	# For testing just return the light state
-	recorded_imgs_directory = "../../../recorded_imgs/"
+	"""recorded_imgs_directory = "../../../recorded_imgs/"
 	if not os.path.exists(recorded_imgs_directory):
 		os.makedirs(recorded_imgs_directory)
 	self.img_counter += 1 
-	num_imgs_to_drop = 10
-	if ((self.img_counter % num_imgs_to_drop) == 0):	
+	num_imgs_to_drop = 10"""
+	"""if ((self.img_counter % num_imgs_to_drop) == 0):	
 		cv_image = self.bridge.imgmsg_to_cv2(self.camera_image, "bgr8")
 		new_image_path = recorded_imgs_directory + 'img_' + str(light.state) + '_' + str(self.img_counter / num_imgs_to_drop) + '.png'
 		cv2.imwrite(new_image_path ,cv_image)
-		rospy.logerr("light.state:{0}".format(light.state))
+		rospy.logerr("light.state:{0}".format(light.state))"""
 	
 	
 
@@ -154,31 +154,29 @@ class TLDetector(object):
             return False
 
         cv_image = self.bridge.imgmsg_to_cv2(self.camera_image, "bgr8")
-	#print("self.camera_image.size:", self.camera_image.size)
-	#print("cv_image.size:", cv_image.size)
-	##########################
 	new_image_path = 'curr_img.jpg'
 	cv2.imwrite(new_image_path ,cv_image)
 	image_path = new_image_path
 	image = PIL.Image.open(image_path)
+	resize = 200, 160
+  	image.thumbnail(resize, PIL.Image.ANTIALIAS)
 	detected_imgs_np_list = self.object_detector.detect_objects_in_img(image)
 	image_counter = 0
 	detection_counter = 0
 	for image_np2 in detected_imgs_np_list:
-		print("CLASIFICATION OUT: ",self.light_classifier.get_classification(image_np2))
-		new_image_name = 'image-' + str(image_counter) + '-' + str(detection_counter) + '.jpg'
+		classification_out = self.light_classifier.get_classification(image_np2)
+		print("CLASIFICATION OUT: ",classification_out)
+		if classification_out != 4:#not equal UNKOWN
+			return classification_out
+		"""new_image_name = 'image-' + str(image_counter) + '-' + str(detection_counter) + '.jpg'
 		print new_image_name
 		scipy.misc.imsave(new_image_name, image_np2)
 		detection_counter += 1
-	image_counter += 1
-	##########################
-	#pil_im = PIL.Image.fromarray(cv_image)
-	#print("pil_im.size: ", pil_im.size)
-	#self.object_detector.run_inference_for_single_image(pil_im)
+	image_counter += 1"""
 	
-	return light.state#####################################################
+	#return light.state#####################################################
         #Get classification
-        return self.light_classifier.get_classification(cv_image)
+        return 4 #UNKOWN
 
     def process_traffic_lights(self):
         """Finds closest visible traffic light, if one exists, and determines its
@@ -208,7 +206,8 @@ class TLDetector(object):
 			diff = d
 			closest_light = light
 			line_wp_idx = temp_wp_idx
-
+	if diff > 70:
+		return -1, TrafficLight.UNKNOWN
         #TODO find the closest visible traffic light (if one exists)
 
         if closest_light:
