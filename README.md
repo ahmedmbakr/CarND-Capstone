@@ -28,6 +28,30 @@ Those commads are:
  - Road Wheel angle
  - Acceleration (Throttle)
  - Deceleration (Brake)
+ It publishes new commands in 50HZ
+ 
+#### Twist constroller
+A PID controller that controls the throttle of the car. I used the P,I, and D configurations used in the PID project which are:
+- P ==> 0.3
+- I ==> 0.001
+- D ==> 10
+
+I also set the maximum acceleration of the car to be 0.2.
+The car fully stops if we apply a force of 700 N*m
+
+#### Traffic light detector
+The most difficult problem in this project is to detect the traffic signs.
+I used the [tensorflow detection API](https://github.com/ahmedmbakr/CarND-Capstone/tree/master/ros/src/tl_detector/object_detection). I followed the installation steps to download the model and its dependencies.
+I used ssd-mobilenet-coco-v1.
+The model can be found in the following directory from the git repo `CarND-Capstone/ros/src/tl_detector/object_detection/`.
+The main script for running the detection model is `object_detection_main.py`.
+The most important function in this python file is `detect_objects_in_img` which takes an image, and returns a list of the object detected in the image, and their exact locations in the image with their classes.
+We are interested in class-id 10 which is the traffic sign class.
+
+#### Traffic sign classification
+Once the traffic signs are detected, I cut the detected objects into small images, and using computer-vision I use the threshold values to get the red, and green pixels in the traffic so that I can know if it is red or green sign.
+I can classify the images with a very high acuracy.
+I have only problems in the speed of the detector because I am running the tensorflow on the CPU not GPU.
 
 Please use **one** of the two installation options, either native **or** docker installation.
 
