@@ -2,9 +2,10 @@
 E-mail: ahmed.bakr@feng.bu.edu.eg
 
 This is the project repo for the final project of the Udacity Self-Driving Car Nanodegree: Programming a Real Self-Driving Car. For more information about the project, see the project introduction [here](https://classroom.udacity.com/nanodegrees/nd013/parts/6047fe34-d93c-4f50-8336-b70ef10cb4b2/modules/e1a23b06-329a-4684-a717-ad476f0d8dff/lessons/462c933d-9f24-42d3-8bdc-a08a5fc866e4/concepts/5ab4b122-83e6-436d-850f-9f4d26627fd9).
+![](imgs/udacity-car.jpg)
 
 The project is built using ROS nodes that communicate with each other using ros-topics as shown in the following figure:
-**TODO: put the figure here **
+![](imgs/final-project-ros-graph-v2.png)
 
 ### Project requirements
 This projects requires the car to move in the middle lane and stop at the red lights using detection and classification mechanisms.
@@ -52,6 +53,18 @@ We are interested in class-id 10 which is the traffic sign class.
 Once the traffic signs are detected, I cut the detected objects into small images, and using computer-vision I use the threshold values to get the red, and green pixels in the traffic so that I can know if it is red or green sign.
 I can classify the images with a very high acuracy.
 I have only problems in the speed of the detector because I am running the tensorflow on the CPU not GPU.
+
+The following image shows the green component of a green traffic sign.
+![](imgs/green-compon-for-green-traffic.jpg)
+
+The following image shows the red component of a green traffic sign.
+![](imgs/red-compon-for-green-traffic.jpg)
+
+The following image shows the red component of a red traffic sign.
+![](imgs/red-compon-for-red-traffic.jpg)
+
+The following image shows the green component of a red traffic sign.
+![](imgs/green-compon-for-red-traffic.jpg)
 
 Please use **one** of the two installation options, either native **or** docker installation.
 
