@@ -8,20 +8,22 @@ The project is built using ROS nodes that communicate with each other using ros-
 ![](imgs/final-project-ros-graph-v2.png)
 
 ### Project requirements
-This projects requires the car to move in the middle lane and stop at the red lights using detection and classification mechanisms.
+This projects requires the car to move in the middle lane and stop at the red lights using detection and classification mechanisms, then moves again in the same lane when the traffic is green.
 The acceleration of the car should not exceed 10 m/s^2, and the jerk should not exceed 10 m/s^2.
 
 Lets talk briefly about the important parts of the project:
 
 #### Waypoint Updater
-This ros node is responsible for giving the simulator a list of points (Trajectory) for the next T seconds so that the car follows.
+This ros node is responsible for giving the simulator a list of points (Trajectory) for the next T seconds so that the car can follow.
 I used 50 lookahead points.
 This node is responsible for the acceleration and the deceleration of the car.
-It accelerates as long as there is no red traffic in front of it, and decelerates otherwise.
+It accelerates as long as there is no red or yellow traffic in front of it, and decelerates otherwise.
+It subscribes to the base way points to follow the basic way points of the road for the mid lane.
+It also subscribes to the traffic waypoint to know the location of the traffic sign and its state to determine wheter the car will accelerate or decelerate.
 
 #### Waypoint Loader
 This ros node runs only once and it is responsible for genrating the way points for the whole road.
-I used it also to set the maximum speed of the car.
+I used it also to set the maximum speed of the car to approximately 10MPH.
 
 #### DBW node
 Drive by wire node is responsible for giving commands to the car so that it makes sure that the car follows the trajectory.
@@ -42,6 +44,13 @@ The car fully stops if we apply a force of 700 N*m
 
 #### Traffic light detector
 The most difficult problem in this project is to detect the traffic signs.
+This module sends the images to the classification module to get the state of the light.
+For the sake of speed, I only send the images to the classification module only when we are close to the place of the traffic by 70 way points.
+As a recovery mechanism, when the classification module sends UNKOWN traffic state, it considers it as a red state.
+
+**Important Note** The latest commits does not rely on the tensor flow detection API dueto the high latency of the system because of not using tensorflow with GPU, but if you would like to have a look on this version you can go back to the commit whose hash value is: 3c4e1e636a9a40c09f045a8f19dcee43871676c6.
+Please feel free to skip the following paragraph if you are not interested to know about the tensor flow detection API.
+
 I used the [tensorflow detection API](https://github.com/ahmedmbakr/CarND-Capstone/tree/master/ros/src/tl_detector/object_detection). I followed the installation steps to download the model and its dependencies.
 I used ssd-mobilenet-coco-v1.
 The model can be found in the following directory from the git repo `CarND-Capstone/ros/src/tl_detector/object_detection/`.
@@ -49,10 +58,11 @@ The main script for running the detection model is `object_detection_main.py`.
 The most important function in this python file is `detect_objects_in_img` which takes an image, and returns a list of the object detected in the image, and their exact locations in the image with their classes.
 We are interested in class-id 10 which is the traffic sign class.
 
-#### Traffic sign classification
-Once the traffic signs are detected, I cut the detected objects into small images, and using computer-vision I use the threshold values to get the red, and green pixels in the traffic so that I can know if it is red or green sign.
+#### Traffic sign detection and classification
+I used open-cv to detect the traffic signs and its colors which is very fast compared to the tensor flow API when you do not have access to a very powerful machine with a good GPU.
+
+I used computer-vision Iwith the threshold values to get the red, yellow and green pixels in the traffic so that I can know if it is red, yellow or green sign.
 I can classify the images with a very high acuracy.
-I have only problems in the speed of the detector because I am running the tensorflow on the CPU not GPU.
 
 The following image shows the green component of a green traffic sign.
 ![](imgs/green-compon-for-green-traffic.jpg)
@@ -65,6 +75,9 @@ The following image shows the red component of a red traffic sign.
 
 The following image shows the green component of a red traffic sign.
 ![](imgs/green-compon-for-red-traffic.jpg)
+
+The following image shows the accuracy of the detection for the yellow traffic and classifying red, and green is much more easier because our image is RGB which means that it has the R component and G component that can be exctracted.
+![](imgs/yellow-filter.jpg)
 
 Please use **one** of the two installation options, either native **or** docker installation.
 
