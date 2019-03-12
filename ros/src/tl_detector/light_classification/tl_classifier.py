@@ -7,9 +7,9 @@ class TLClassifier(object):
     def __init__(self):
         #TODO load classifier
         self.img_counter = 0
-	self.recorded_imgs_directory = '../../../recorded_imgs_classifier/'
+	"""self.recorded_imgs_directory = '../../../recorded_imgs_classifier/'
 	if not os.path.exists(self.recorded_imgs_directory):
-		os.makedirs(self.recorded_imgs_directory)
+		os.makedirs(self.recorded_imgs_directory)"""
 
     def get_classification(self, cv_image):
         """Determines the color of the traffic light in the image
@@ -69,8 +69,8 @@ class TLClassifier(object):
 	elif traffic_state == TrafficLight.UNKNOWN:#recovery mechanism. consider the unkown as the red traffic
 	    print(" UNKOWN, recover to RED")
 	    self.img_counter += 1
-	    new_image_path = self.recorded_imgs_directory + 'UNKOWN_' +str(self.img_counter) + '_' + str(num_red_pixels) + '_' + str(num_yellow_pixels) + '_' + str(num_green_pixels) + '.jpg'
-	    cv2.imwrite(new_image_path, cv_image)
+	    #new_image_path = self.recorded_imgs_directory + 'UNKOWN_' +str(self.img_counter) + '_' + str(num_red_pixels) + '_' + str(num_yellow_pixels) + '_' + str(num_green_pixels) + '.jpg'
+	    #cv2.imwrite(new_image_path, cv_image)
 	    traffic_state = TrafficLight.RED
         return traffic_state
 	
