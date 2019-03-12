@@ -106,7 +106,7 @@ class TLDetector(object):
             self.last_state = self.state
             light_wp = light_wp if (state == TrafficLight.RED or state == TrafficLight.YELLOW) else -1
             self.last_wp = light_wp
-	    print("red-light location published by detector:", light_wp)
+	    print("Traffic-light location published by detector:", light_wp)
             self.upcoming_red_light_pub.publish(Int32(light_wp))
         else:
             self.upcoming_red_light_pub.publish(Int32(self.last_wp))

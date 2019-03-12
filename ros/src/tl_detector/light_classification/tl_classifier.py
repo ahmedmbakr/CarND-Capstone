@@ -19,7 +19,7 @@ class TLClassifier(object):
         """
 	YELLOW_MIN_ACCEPTANCE_NUM_PIXELS = 100	
 	RED_MIN_ACCEPTANCE_NUM_PIXELS = 70	
-	GREEN_MIN_ACCEPTANCE_NUM_PIXELS = 10	
+	GREEN_MIN_ACCEPTANCE_NUM_PIXELS = 1	
 
 	lower_yellow = np.array([0,150,150], dtype = "uint8")
 	upper_yellow = np.array([62,255,255], dtype = "uint8")
@@ -48,6 +48,8 @@ class TLClassifier(object):
 	num_green_pixels = np.sum(output_green == 1)
 
   	print("num_yellow_pixels:", num_yellow_pixels)
+	print("num_red_pixels:", num_red_pixels)
+	print("num_green_pixels:", num_green_pixels)
 
 	traffic_state = TrafficLight.UNKNOWN
 	if(num_red_pixels > RED_MIN_ACCEPTANCE_NUM_PIXELS and num_red_pixels > num_yellow_pixels and num_red_pixels > num_green_pixels):
