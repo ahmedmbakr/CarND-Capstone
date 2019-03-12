@@ -12,7 +12,6 @@ import cv2
 import yaml
 from scipy.spatial import KDTree
 import os
-from object_detection.object_detection_main import Object_detector
 import PIL
 import scipy.misc
 import numpy as np
@@ -32,8 +31,6 @@ class TLDetector(object):
 	self.img_counter = 0
 
         self.lights = []
-
-        self.object_detector = Object_detector()
 
         sub1 = rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb)
         sub2 = rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)
