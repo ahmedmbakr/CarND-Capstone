@@ -1,11 +1,15 @@
 from styx_msgs.msg import TrafficLight
 import numpy as np
 import cv2
+import os
 
 class TLClassifier(object):
     def __init__(self):
         #TODO load classifier
-        pass
+        self.img_counter = 0
+	self.recorded_imgs_directory = '../../../recorded_imgs_classifier/'
+	if not os.path.exists(self.recorded_imgs_directory):
+		os.makedirs(self.recorded_imgs_directory)
 
     def get_classification(self, cv_image):
         """Determines the color of the traffic light in the image
@@ -17,8 +21,9 @@ class TLClassifier(object):
             int: ID of traffic light color (specified in styx_msgs/TrafficLight)
 
         """
-	YELLOW_MIN_ACCEPTANCE_NUM_PIXELS = 100	
-	RED_MIN_ACCEPTANCE_NUM_PIXELS = 70	
+	cv_image = cv2.resize(cv_image, (200, 180), interpolation = cv2.INTER_AREA)
+	YELLOW_MIN_ACCEPTANCE_NUM_PIXELS = 70	
+	RED_MIN_ACCEPTANCE_NUM_PIXELS = 50	
 	GREEN_MIN_ACCEPTANCE_NUM_PIXELS = 1	
 
 	lower_yellow = np.array([0,150,150], dtype = "uint8")
@@ -63,6 +68,9 @@ class TLClassifier(object):
             traffic_state = TrafficLight.GREEN
 	elif traffic_state == TrafficLight.UNKNOWN:#recovery mechanism. consider the unkown as the red traffic
 	    print(" UNKOWN, recover to RED")
+	    self.img_counter += 1
+	    new_image_path = self.recorded_imgs_directory + 'UNKOWN_' +str(self.img_counter) + '_' + str(num_red_pixels) + '_' + str(num_yellow_pixels) + '_' + str(num_green_pixels) + '.jpg'
+	    cv2.imwrite(new_image_path, cv_image)
 	    traffic_state = TrafficLight.RED
         return traffic_state
 	
