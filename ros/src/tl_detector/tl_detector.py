@@ -137,80 +137,13 @@ class TLDetector(object):
             int: ID of traffic light color (specified in styx_msgs/TrafficLight)
 
         """	
-	# For testing just return the light state
-	recorded_imgs_directory = "../../../recorded_imgs/"
-	if not os.path.exists(recorded_imgs_directory):
-		os.makedirs(recorded_imgs_directory)
-	self.img_counter += 1 
-	num_imgs_to_drop = 10
-	"""if ((self.img_counter % num_imgs_to_drop) == 0):	
-		cv_image = self.bridge.imgmsg_to_cv2(self.camera_image, "bgr8")
-		new_image_path = recorded_imgs_directory + 'img_' + str(light.state) + '_' + str(self.img_counter / num_imgs_to_drop) + '.png'
-		cv2.imwrite(new_image_path ,cv_image)
-		rospy.logerr("light.state:{0}".format(light.state))"""
-	
-	print("new image recieved by get_light_state")
-	########################return light.state#####################################################
         if(not self.has_image):
             self.prev_light_loc = None
             return False
 
         cv_image = self.bridge.imgmsg_to_cv2(self.camera_image, "bgr8")
-	#new_image_path = 'curr_img.jpg'
-	#cv2.imwrite(new_image_path ,cv_image)
-	#image_path = new_image_path
-	#image = PIL.Image.open(image_path)
-	#resize = 200, 160
-  	#image.thumbnail(resize, PIL.Image.ANTIALIAS)
 	
-	#lower_yellow = np.array([25,146,190], dtype = "uint8")
-	#upper_yellow = np.array([62,174,255], dtype = "uint8")
-	lower_yellow = np.array([0,150,150], dtype = "uint8")
-	upper_yellow = np.array([62,255,255], dtype = "uint8")
-
-	lower_red = np.array([17,15,100], dtype = "uint8")
-	upper_red = np.array([50,56,255], dtype = "uint8")
-	
-	lower_green = np.array([0,100,0], dtype = "uint8")
-	upper_green = np.array([50,255,56], dtype = "uint8")
-	
-
-	yellow_mask = cv2.inRange(cv_image, lower_yellow, upper_yellow)
-	red_mask = cv2.inRange(cv_image, lower_red, upper_red)
-	green_mask = cv2.inRange(cv_image, lower_green, upper_green)
-
-	output_yellow = cv2.bitwise_and(cv_image, cv_image, mask = yellow_mask)
-	output_red = cv2.bitwise_and(cv_image, cv_image, mask = red_mask)
-	output_green = cv2.bitwise_and(cv_image, cv_image, mask = green_mask)
-
-	output_yellow = output_yellow > 150
-	output_red = output_red > 100
-	output_green = output_green > 100
-
-	#output_yellow = output_yellow > 150
-	#cv_image = np.hstack([cv_image, output_green])
-
-	num_yellow_pixels = np.sum(output_yellow == 1)
-	num_red_pixels = np.sum(output_red == 1)
-	num_green_pixels = np.sum(output_green == 1)
-
-  	print("num_yellow_pixels:", num_yellow_pixels)
-
-	traffic_state = TrafficLight.UNKNOWN
-	if(num_red_pixels > 70 and num_red_pixels > num_yellow_pixels and num_red_pixels > num_green_pixels):
-	    print(" is red")
-	    traffic_state = TrafficLight.RED	    
-        elif(num_yellow_pixels > 100 and num_yellow_pixels > num_red_pixels and num_yellow_pixels > num_green_pixels):
-	    print(" is yellow")
-	    traffic_state = TrafficLight.YELLOW
-        elif num_green_pixels > 20:
-	    print(" is green")
-            traffic_state = TrafficLight.GREEN
-	#return light.state#####################################################
-        #Get classification
-	new_image_path = recorded_imgs_directory + 'img_' + str(self.img_counter) + '_' + str(light.state) + '_' + str(traffic_state) + '.png'
-	cv2.imwrite(new_image_path ,cv_image)
-        return traffic_state
+	return self.light_classifier.get_classification(cv_image)
 
     def process_traffic_lights(self):
         """Finds closest visible traffic light, if one exists, and determines its

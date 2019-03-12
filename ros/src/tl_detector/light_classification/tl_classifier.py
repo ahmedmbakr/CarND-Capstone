@@ -1,54 +1,66 @@
 from styx_msgs.msg import TrafficLight
 import numpy as np
+import cv2
 
 class TLClassifier(object):
     def __init__(self):
         #TODO load classifier
         pass
 
-    def get_classification(self, image_np):
+    def get_classification(self, cv_image):
         """Determines the color of the traffic light in the image
 
         Args:
-            image (numpy image): image containing the traffic light
+            image (cv2 image): image containing the traffic light
 
         Returns:
             int: ID of traffic light color (specified in styx_msgs/TrafficLight)
 
         """
-	#These acceptance rates are configured for the input image of size 200,150
-	MIN_NUM_ACCEPTED_PIXElS = 2 
-	MAX_NUM_REJECTED_PIXELS = 1
+	YELLOW_MIN_ACCEPTANCE_NUM_PIXELS = 100	
+	RED_MIN_ACCEPTANCE_NUM_PIXELS = 70	
+	GREEN_MIN_ACCEPTANCE_NUM_PIXELS = 10	
 
-	"""#These acceptance rates are configured for the input image of size 800,600
-	MIN_NUM_ACCEPTED_PIXElS = 100 
-	MAX_NUM_REJECTED_PIXELS = 10"""
-	
-	image_np_red = image_np[:, :,0]
-	image_np_red = image_np_red > 240
-	
-    	image_np_green = image_np[:,:,1]
-	image_np_green = image_np_green > 240
+	lower_yellow = np.array([0,150,150], dtype = "uint8")
+	upper_yellow = np.array([62,255,255], dtype = "uint8")
 
-    	num_green = self.count_np(image_np_green)
-	num_red = self.count_np(image_np_red)
-	print("num_green_pixels:", num_green)
-	print("num_red_pixels:", num_red)
-	if num_green <= MAX_NUM_REJECTED_PIXELS and num_red >= MIN_NUM_ACCEPTED_PIXElS:
-		return TrafficLight.RED
+	lower_red = np.array([17,15,100], dtype = "uint8")
+	upper_red = np.array([50,56,255], dtype = "uint8")
 	
-	if num_green >= MIN_NUM_ACCEPTED_PIXElS and num_red <= MAX_NUM_REJECTED_PIXELS:
-		return TrafficLight.GREEN
-        #TODO implement light color prediction
-        return TrafficLight.UNKNOWN
-   
-    def count_np(self, image_np):
-	c = 0
-	size = image_np.size
-	print size
-	for x in np.nditer(image_np):
-		if x == True:
-			c += 1
-	#print("final c:", c)
-	return c
+	lower_green = np.array([0,100,0], dtype = "uint8")
+	upper_green = np.array([50,255,56], dtype = "uint8")
+	
+
+	yellow_mask = cv2.inRange(cv_image, lower_yellow, upper_yellow)
+	red_mask = cv2.inRange(cv_image, lower_red, upper_red)
+	green_mask = cv2.inRange(cv_image, lower_green, upper_green)
+
+	output_yellow = cv2.bitwise_and(cv_image, cv_image, mask = yellow_mask)
+	output_red = cv2.bitwise_and(cv_image, cv_image, mask = red_mask)
+	output_green = cv2.bitwise_and(cv_image, cv_image, mask = green_mask)
+
+	output_yellow = output_yellow > 150
+	output_red = output_red > 100
+	output_green = output_green > 100
+
+	num_yellow_pixels = np.sum(output_yellow == 1)
+	num_red_pixels = np.sum(output_red == 1)
+	num_green_pixels = np.sum(output_green == 1)
+
+  	print("num_yellow_pixels:", num_yellow_pixels)
+
+	traffic_state = TrafficLight.UNKNOWN
+	if(num_red_pixels > RED_MIN_ACCEPTANCE_NUM_PIXELS and num_red_pixels > num_yellow_pixels and num_red_pixels > num_green_pixels):
+	    print(" is red")
+	    traffic_state = TrafficLight.RED	    
+        elif(num_yellow_pixels > YELLOW_MIN_ACCEPTANCE_NUM_PIXELS and num_yellow_pixels > num_red_pixels and num_yellow_pixels > num_green_pixels):
+	    print(" is yellow")
+	    traffic_state = TrafficLight.YELLOW
+        elif num_green_pixels > GREEN_MIN_ACCEPTANCE_NUM_PIXELS:
+	    print(" is green")
+            traffic_state = TrafficLight.GREEN
+	elif traffic_state == TrafficLight.UNKNOWN:#recovery mechanism. consider the unkown as the red traffic
+	    print(" UNKOWN, recover to RED")
+	    traffic_state = TrafficLight.RED
+        return traffic_state
 	
