@@ -170,7 +170,7 @@ class TLDetector(object):
 			diff = d
 			closest_light = light
 			line_wp_idx = temp_wp_idx
-	if diff > 70:
+	if diff > 100:
 		return -1, TrafficLight.UNKNOWN
         #TODO find the closest visible traffic light (if one exists)
 
